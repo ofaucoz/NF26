@@ -5,3 +5,5 @@
 * Birt
 
 * Pentaho
+
+* Cassandra
