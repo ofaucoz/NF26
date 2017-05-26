@@ -2,10 +2,9 @@
 
 ## 1 - Création du MCD
 
-* header : "TRIP_ID","CALL_TYPE","ORIGIN_CALL","ORIGIN_STAND","TAXI_ID",
+### Header :
+"TRIP_ID","CALL_TYPE","ORIGIN_CALL","ORIGIN_STAND","TAXI_ID",
 "TIMESTAMP","DAY_TYPE","MISSING_DATA","POLYLINE"
-
-* description : 
 
 ### Attribute Information:
 
@@ -48,6 +47,29 @@ This field has not been correctly calculated. Please see the following links as 
 
 #### POLYLINE: 
 (String): It contains a list of GPS coordinates (i.e. WGS84 format) mapped as a string. The beginning and the end of the string are identified with brackets (i.e. [ and ], respectively). Each pair of coordinates is also identified by the same brackets as [LONGITUDE, LATITUDE]. This list contains one pair of coordinates for each 15 seconds of trip. The last list item corresponds to the trip's destination while the first one represents its start.
+
+### Faits:
+
+* Longueur du trajet par localisation?
+* Call type par localisation?
+* Nombre de courses par téléphone?
+* Nombre de courses par stand?
+* Ratio stand/call?
+* Nombre de courses / taxi?
+* Localistation / taxi?
+* Heure d'influence la plus/moins forte?
+* Ratio par rapport au day type?
+* Passage le plus fréquent pendant les courses?
+* Distance parcourue (calculée à partir des localisations entre les points)
+
+### Dimensions :
+
+* Distance parcourue totale: Distance
+* Localisation : bool(stand), localisation(longitude, latitude)?
+* Appel : Call type, ORIGIN_CALL if "A"?
+* Taxi : ID
+* Time : Start, DayType 
+
 
 ## 2 - Importation des données
 
