@@ -65,10 +65,10 @@ This field has not been correctly calculated. Please see the following links as 
 ### Dimensions :
 
 * Distance parcourue totale: Distance
-* Localisation : bool(stand), localisation(longitude, latitude)?
+* Localisation : localisation(longitude, latitude)?
 * Appel : Call type, ORIGIN_CALL if "A"?
-* Taxi : ID
-* Time : Start, DayType 
+* Taxi : ID, ORIGIN_STAND(int)
+* Time : Timestamp,year,month,day,hours, DayType 
 
 
 ## 2 - Importation des données
