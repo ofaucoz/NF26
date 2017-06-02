@@ -66,8 +66,8 @@ This field has not been correctly calculated. Please see the following links as 
 
 * Distance parcourue totale: Distance
 * Localisation : localisation(longitude, latitude)?
-* Appel : Call type, ORIGIN_CALL if "A"?
-* Taxi : ID, ORIGIN_STAND(int)
+* Appel : Call type, ORIGIN_CALL, ORIGIN_STAND
+* Taxi : ID
 * Time : Timestamp,year,month,day,hours, DayType 
 
 
