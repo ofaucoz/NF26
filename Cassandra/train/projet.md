@@ -64,7 +64,6 @@ This field has not been correctly calculated. Please see the following links as 
 
 ### Dimensions :
 
-* Distance parcourue totale: Distance
 * Localisation : localisation(longitude, latitude)?
 * Appel : Call type, ORIGIN_CALL, ORIGIN_STAND
 * Taxi : ID
