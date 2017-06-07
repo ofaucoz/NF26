@@ -48,8 +48,13 @@ def main():
         header = next(reader)
         #"TRIP_ID","CALL_TYPE","ORIGIN_CALL","ORIGIN_STAND","TAXI_ID",
         # "TIMESTAMP","DAY_TYPE","MISSING_DATA","POLYLINE"
-        id_call = 0
+        id = 0
         dict_header = dict()
+        dict_time = dict()
+        dict_time["hour"] = dict()
+        dict_time["month"] = dict()
+        dict_time["dayOfWeek"] = dict()
+        dict_time["season"] = dict()
         dict_header[0] = "int"
         dict_header[1] = "string"
         dict_header[2] = "int"
@@ -74,6 +79,10 @@ def main():
             day_type = row[6]
             missing_data = row[7]
             polyline = row[8]
+            longitude_start = 0.0
+            latitude_start = 0.0
+            longitude_end = 0.0
+            latitude_end = 0.0
             try:
                 if(missing_data != "FALSE"):
                     date = datetime.datetime.fromtimestamp(int(timestamp))
@@ -82,11 +91,45 @@ def main():
                     longitude_start, latitude_start = localisation_start.split(",")
                     localisation_end = localisation[-1]
                     longitude_end, latitude_end = localisation_end.split(",")
-                    distance = haversine(float(longitude_start), float(latitude_start), float(longitude_end), float(latitude_end))
-                    print(distance)
+                    distance = haversine(float(longitude_start), float(latitude_start),
+                            float(longitude_end), float(latitude_end))
+                    if ((date.month > 6 and date.month < 9) or 
+                        (date.month == 6 and date.day >= 21) or 
+                        (date.month == 9 and date.day <= 21)):
+                        season = "ete"
+                    if ((date.month > 9 and date.month < 12) or 
+                        (date.month == 9 and date.day >= 22) or 
+                        (date.month == 12 and date.day <= 20)):
+                        season = "automne"
+                    if ((date.month < 3) or 
+                        (date.month == 12 and date.day >= 21) or 
+                        (date.month == 3 and date.day <= 19)):
+                        season = "hiver"
+                    if ((date.month > 3 and date.month < 6) or 
+                        (date.month == 3 and date.day >= 19) or 
+                        (date.month == 6 and date.day <= 20)):
+                        season = "printemps"
+                    if (not season in dict_time["season"]):
+                        dict_time["season"][season] = 0
+                    dict_time["season"][season] += 1
+
             except ValueError:
                 continue
-                
+            insert = ("insert into all_table (id, longitude_start, latitude_start,"
+                + "longitude_end, latitude_end, distance, call_type, origin_call"
+                + ", origin_stand, taxi_id, timestamp, day, hour, month, season,"
+                + "day_type) values("
+                + str(id) + "," + str(round(float(longitude_start), 3)) + "," 
+                + str(round(float(latitude_start), 3)) 
+                + "," + str(round(float(longitude_end), 3)) 
+                + "," + str(round(float(latitude_end), 3)) + "," + str(distance) 
+                + "," + "'" + str(call_type) + "'" + "," + str(origin_call) + "," 
+                + str(origin_stand) + "," + str(taxi_id) + "," + str(timestamp) + "," 
+                + str(date.day) + "," + str(date.hour) + "," + str(date.month) + "," 
+                + "'" + str(season) + "'" + "," + "'" + str(day_type) + "'" + ")")
+            session.execute(insert)
+            id += 1
+
 if __name__ == '__main__':
     main()
 
