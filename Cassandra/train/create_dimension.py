@@ -59,16 +59,16 @@ def create_by_origin_stand():
     session.execute(create)
 
 def main():    
-    create_by_origin_stand()
-    create_by_month_distance()
-    create_by_day_of_week_distance()
-    create_by_call_type_distance()
-    create_by_taxi()
-    create_by_distance()
-    create_by_start()
-    create_by_end()
-    create_by_hour()
-   #create_by_pos_call_type()
+   # create_by_origin_stand()
+   # create_by_month_distance()
+   # create_by_day_of_week_distance()
+   # create_by_call_type_distance()
+   # create_by_taxi()
+   # create_by_distance()
+   # create_by_start()
+   # create_by_end()
+   # create_by_hour()
+    create_by_pos_call_type()
 
 if __name__ == '__main__':
     main()
