@@ -7,67 +7,68 @@ session = cluster.connect('e34_taxi')
 # This script will create the tables
 
 
-#Fait distance_localisation
-def create_distance_localisation():
-    create = "CREATE TABLE distance_localisation (longitude_start double ,latitude_start double, distance bigInt, PRIMARY KEY(longitude_start, latitude_start, distance));"
+
+#Fait table_by_hour
+def create_by_hour():
+    create = "CREATE TABLE by_hour (id bigInt, longitude_start double, latitude_start double, longitude_end double, latitude_end double, distance double, call_type text, origin_call int, origin_stand int, taxi_id bigInt, timestamp int, day int, hour int, year int, month int, season text, dayOfWeek int, day_type text, PRIMARY KEY(hour, year, month, day, id));"
     session.execute(create)
 
-#Fait courses_localisation
-def create_courses_localisation():
-    create = "CREATE TABLE courses_localisation (longitude_start double ,latitude_start double, courses bigInt, PRIMARY KEY(longitude_start, latitude_start, courses));"
+#Fait table_by_start
+def create_by_start():
+    create = "CREATE TABLE by_start (id bigInt, longitude_start double, latitude_start double, longitude_end double, latitude_end double, distance double, call_type text, origin_call int, origin_stand int, taxi_id bigInt, timestamp int, day int, hour int, year int,  month int, season text, dayOfWeek int, day_type text, PRIMARY KEY((longitude_start, latitude_start), distance, year, month, day, dayOfWeek, hour, id));"
     session.execute(create)
 
-#Fait call_type_localisation
-def create_calltype_localisation():
-    create = "CREATE TABLE calltype_localisation (longitude_start double ,latitude_start double, call_type bigInt, PRIMARY KEY(longitude_start, latitude_start, call_type));"
+#Fait table_by_end
+def create_by_end():
+    create = "CREATE TABLE by_end (id bigInt, longitude_start double, latitude_start double, longitude_end double, latitude_end double, distance double, call_type text, origin_call int, origin_stand int, taxi_id bigInt, timestamp int, day int, hour int, year int, month int, season text, dayOfWeek int, day_type text, PRIMARY KEY((longitude_end, latitude_end), distance, year, month, day, dayOfWeek, hour, id));"
     session.execute(create)
 
-#Fait nb_courses_taxi
-def create_courses_taxi():
-    create = "CREATE TABLE courses_taxi (taxi_id bigInt, courses bigInt, PRIMARY KEY(taxi_id, courses));"
+#Fait table_by_distance
+def create_by_distance():
+    create = "CREATE TABLE by_distance (id bigInt, longitude_start double, latitude_start double, longitude_end double, latitude_end double, distance double, call_type text, origin_call int, origin_stand int, taxi_id bigInt, timestamp int, day int, hour int, year int, month int, season text, dayOfWeek int, day_type text, PRIMARY KEY(distance, year, month, day, dayOfWeek, hour, id));"
     session.execute(create)
 
-#Fait taxi_localisation
-def create_taxi_localisation():
-    create = "CREATE TABLE taxi_localisation (taxi_id bigInt, longitude double, latitude double, PRIMARY KEY(taxi_id, longitude, latitude));"
+#Fait table_by_taxi
+def create_by_taxi():
+    create = "CREATE TABLE by_taxi (id bigInt, longitude_start double, latitude_start double, longitude_end double, latitude_end double, distance double, call_type text, origin_call int, origin_stand int, taxi_id bigInt, timestamp int, day int, hour int, month int, year int,  season text, dayOfWeek int, day_type text, PRIMARY KEY(taxi_id, distance, year, month, day, dayOfWeek, hour, id));"
     session.execute(create)
 
-#Fait hour_nb_courses
-def create_hour_courses():
-    create = "CREATE TABLE courses_hour (hour int, course bigInt, PRIMARY KEY(hour, course));"
+#fait table_by_call_type_distance
+def create_by_call_type_distance():
+    create = "create table by_call_type (id bigint, longitude_start double, latitude_start double, longitude_end double, latitude_end double, distance double, call_type text, origin_call int, origin_stand int, taxi_id bigint, timestamp int, day int, hour int, year int ,month int, season text, dayofweek int, day_type text, primary key(call_type, distance, year, month, day, dayofweek, hour, id));"
     session.execute(create)
 
-#Fait month_nb_courses
-def create_month_courses():
-    create = "CREATE TABLE courses_month (month int, course bigInt, PRIMARY KEY(month, course));"
+#Fait table_by_pos_call_type
+def create_by_pos_call_type():
+    create = "CREATE TABLE by_pos_call_type (id bigInt, longitude_start double, latitude_start double, longitude_end double, latitude_end double, distance double, call_type text, origin_call int, origin_stand int, taxi_id bigInt, timestamp int, day int, hour int, year int ,month int, season text, dayOfWeek int, day_type text, PRIMARY KEY((longitude_start, latitude_start), call_type, distance, year, month, day, dayOfWeek, hour, id));"
     session.execute(create)
 
-
-#Fait season_nb_courses
-def create_season_courses():
-    create = "CREATE TABLE courses_season (season int, course bigInt, PRIMARY KEY(season, course));"
+#Fait table_by_day_of_week
+def create_by_day_of_week_distance():
+    create = "CREATE TABLE by_day_of_week (id bigInt, longitude_start double, latitude_start double, longitude_end double, latitude_end double, distance double, call_type text, origin_call int, origin_stand int, taxi_id bigInt, timestamp int, day int, hour int, year int, month int, season text, dayOfWeek int, day_type text, PRIMARY KEY(dayOfWeek, distance, year, month, day, hour, id));"
     session.execute(create)
 
-#Fait dayOfWeek_nb_courses
-def create_dayOfWeek_courses():
-    create = "CREATE TABLE courses_dayOfWeek (dayOfWeek int, course bigInt, PRIMARY KEY(dayOfWeek, course));"
+#Fait table_by_month
+def create_by_month_distance():
+    create = "CREATE TABLE by_month (id bigInt, longitude_start double, latitude_start double, longitude_end double, latitude_end double, distance double, call_type text, origin_call int, origin_stand int, taxi_id bigInt, timestamp int, day int, hour int, year int, month int, season text, dayOfWeek int, day_type text, PRIMARY KEY(month, distance, year, day, dayOfWeek, hour, id));"
     session.execute(create)
 
-#Fait all_table
-def create_all_table():
-    create = "CREATE TABLE all_table (id bigInt, longitude_start double, latitude_start double, longitude_end double, latitude_end double, distance double, call_type text, origin_call int, origin_stand int, taxi_id bigInt, timestamp int, day int, hour int, month int, season text, day_type text, PRIMARY KEY(id));"
+#Fait table_by_origin_stand
+def create_by_origin_stand():
+    create = "CREATE TABLE by_origin_stand (id bigInt, longitude_start double, latitude_start double, longitude_end double, latitude_end double, distance double, call_type text, origin_call int, origin_stand int, taxi_id bigInt, timestamp int, day int, hour int, year int, month int, season text, dayOfWeek int, day_type text, PRIMARY KEY(origin_stand, year, month, day, dayOfWeek, hour, id));"
     session.execute(create)
-def main():
-    #create_courses_localisation()
-    #create_calltype_localisation()
-    #create_courses_taxi()
-    #create_taxi_localisation()
-    #create_hour_courses()
-    #create_month_courses()
-    #create_season_courses()
-    #create_dayOfWeek_courses()
-    #create_distance_localisation()
-    create_all_table()
+
+def main():    
+    create_by_origin_stand()
+    create_by_month_distance()
+    create_by_day_of_week_distance()
+    create_by_call_type_distance()
+    create_by_taxi()
+    create_by_distance()
+    create_by_start()
+    create_by_end()
+    create_by_hour()
+   #create_by_pos_call_type()
 
 if __name__ == '__main__':
     main()

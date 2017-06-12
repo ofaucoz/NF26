@@ -1,7 +1,10 @@
 #!/usr/local/bin/ipython
 import csv
 import datetime
+import progressbar
+import random
 from math import radians, cos, sin, asin, sqrt
+from cassandra.query import BatchStatement
 from cassandra.cluster import Cluster
 cluster = Cluster()
 session = cluster.connect('e34_taxi')
@@ -43,6 +46,10 @@ def RepresentsFloat(s):
         return False
 
 def main():
+    rand_value = random.randint(1,100)
+    print("Reading CSV")
+    tables = ['by_hour', 'by_start', 'by_end', 'by_distance', 'by_taxi', 'by_call_type', 'by_day_of_week', 'by_month', 'by_origin_stand' ,'by_pos_call_type']
+    # tables = ['by_pos_call_type']
     with open('/train.csv') as csvfile:
         reader = csv.reader(csvfile, delimiter=',', quotechar='"')
         header = next(reader)
@@ -64,7 +71,11 @@ def main():
         dict_header[6] = "string"
         dict_header[7] = "string"
         dict_header[8] = "string"
+        p = progressbar.ProgressBar(maxval=len(list(csv.reader(open("/train.csv")))), \
+                    widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
         for row in reader:
+            rand = random.randint(1,100)
+            p.update(id)
             for dict_iter in range(0,len(dict_header)):
                 if (row[dict_iter] == ""):
                     row[dict_iter] = 'null'
@@ -84,7 +95,7 @@ def main():
             longitude_end = 0.0
             latitude_end = 0.0
             try:
-                if(missing_data != "FALSE"):
+                if(missing_data != "FALSE" and rand > 90):
                     date = datetime.datetime.fromtimestamp(int(timestamp))
                     localisation = polyline[2:-1].replace("]","").split(",[")
                     localisation_start = localisation[0]
@@ -113,22 +124,28 @@ def main():
                         dict_time["season"][season] = 0
                     dict_time["season"][season] += 1
 
+                    for table in tables:
+                        if((table == "by_origin_stand") and (origin_stand == 'null')):
+                            continue
+                        insert = ("insert into " + table + "(id, longitude_start, latitude_start,"
+                            + "longitude_end, latitude_end, distance, call_type, origin_call"
+                            + ", origin_stand, taxi_id, timestamp, day, hour, month, year, season, dayOfWeek,"
+                            + "day_type) values("
+                            + str(id) + "," + str(round(float(longitude_start), 3)) + "," 
+                            + str(round(float(latitude_start), 3)) 
+                            + "," + str(round(float(longitude_end), 3)) 
+                            + "," + str(round(float(latitude_end), 3)) + "," + str(round(float(distance),1)) 
+                            + "," + "'" + str(call_type) + "'" + "," + str(origin_call) + "," 
+                            + str(origin_stand) + "," + str(taxi_id) + "," + str(timestamp) + "," 
+                            + str(date.day) + "," + str(date.hour) + "," + str(date.month) + "," 
+                            + str(date.year) + "," +  "'" + str(season) + "'" + "," + str(date.weekday()) + ","  
+                            + "'" + str(day_type) + "'" + ")")
+                        session.execute(insert)
             except ValueError:
                 continue
-            insert = ("insert into all_table (id, longitude_start, latitude_start,"
-                + "longitude_end, latitude_end, distance, call_type, origin_call"
-                + ", origin_stand, taxi_id, timestamp, day, hour, month, season,"
-                + "day_type) values("
-                + str(id) + "," + str(round(float(longitude_start), 3)) + "," 
-                + str(round(float(latitude_start), 3)) 
-                + "," + str(round(float(longitude_end), 3)) 
-                + "," + str(round(float(latitude_end), 3)) + "," + str(distance) 
-                + "," + "'" + str(call_type) + "'" + "," + str(origin_call) + "," 
-                + str(origin_stand) + "," + str(taxi_id) + "," + str(timestamp) + "," 
-                + str(date.day) + "," + str(date.hour) + "," + str(date.month) + "," 
-                + "'" + str(season) + "'" + "," + "'" + str(day_type) + "'" + ")")
-            session.execute(insert)
             id += 1
+        print("Sending batch query")
+        p.finish()
 
 if __name__ == '__main__':
     main()
