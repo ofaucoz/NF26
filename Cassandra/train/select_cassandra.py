@@ -7,6 +7,7 @@ import numpy as np
 import heapq
 import math
 import operator
+import random
 from cassandra.cluster import Cluster
 cluster = Cluster()
 session = cluster.connect('e34_taxi')
@@ -88,7 +89,7 @@ def select_call_type_count():
     rows = session.execute('select call_type, count(*) as occurences from by_call_type group by call_type;')
     for row in rows:
         list_y.append(row.occurences)
-        list_x.append(call_type)
+        list_x.append(row.call_type)
     fig = plt.figure()    
     ax = fig.add_axes([0.2, 0.1, 0.6, 0.75])
     width = 0.75 # the width of the bars
@@ -110,9 +111,9 @@ def select_call_type_distance():
     list_y = list()
     label_x = list()
     rows = session.execute('select call_type, avg(distance) as distance from by_call_type group by call_type')
-   for row in rows:
+    for row in rows:
         list_y.append(row.distance)
-        list_x.append(call_type)
+        list_x.append(row.call_type)
     fig = plt.figure()    
     ax = fig.add_axes([0.2, 0.1, 0.6, 0.75])
     width = 0.75 # the width of the bars
@@ -157,10 +158,10 @@ def select_dayofweek_distance():
     list_x = list()
     list_y = list()
     label_x = list()
-    rows = session.execute('select day_of_week, avg(distance) as distance from by_day_of_week group by day_of_week')
+    rows = session.execute('select dayofweek, avg(distance) as distance from by_day_of_week group by dayofweek')
     for row in rows:
         list_y.append(row.distance)
-        list_x.append(row.day_of_week)
+        list_x.append(row.dayofweek)
     fig = plt.figure()    
     ax = fig.add_axes([0.2, 0.1, 0.6, 0.75])
     width = 0.75 # the width of the bars
@@ -277,7 +278,7 @@ def select_hour_count():
     list_x = list()
     list_y = list()
     label_x = list()
-    rows = session.execute('select hour, year, month,  count(*) as occurences from by_hour group by year, month, hour')
+    rows = session.execute('select hour,  count(*) as occurences from by_hour group by hour')
     for row in rows:
         list_y.append(row.occurences)
         list_x.append(str(row.hour))
@@ -375,7 +376,7 @@ def select_origin_stand_year_count():
     label_x = list()
     rows = session.execute('select origin_stand, year, month,  count(*) as occurences from by_origin_stand group by origin_stand, year, month')
     for row in rows:
-        list_y.append(row.distance)
+        list_y.append(row.occurences)
         list_x.append(str(row.origin_stand) + " - " + str(row.year))
     fig = plt.figure()    
     ax = fig.add_axes([0.2, 0.1, 0.6, 0.75])
@@ -421,7 +422,7 @@ def select_taxi_distance():
     list_x = list()
     list_y = list()
     label_x = list()
-    rows = session.execute('select taxi_id, avg(distance) as distance from taxi_id group by taxi_id')
+    rows = session.execute('select taxi_id, avg(distance) as distance from by_taxi group by taxi_id')
     for row in rows:
         list_y.append(row.distance)
         list_x.append(str(row.taxi_id))
@@ -442,14 +443,15 @@ def select_taxi_distance():
     plt.savefig("barplot_taxi_distance.png")
 
 def euclideanDistance(ind_1, ind_2):
-    distance += pow((ind_1.longitude_start - instance2[x].longitude_start), 2) + pow((ind_1.latitude_start - instance2[x].latitude_start), 2)
+    distance = 0
+    distance += pow((ind_1.longitude_start - ind_2.longitude_start), 2) + pow((ind_1.latitude_start - ind_2.latitude_start), 2)
     return math.sqrt(distance)
 
 def getNeighbors(trainingSet, testInstance, k):
     distances = []
     length = len(testInstance)-1
     for x in range(len(trainingSet)):
-        dist = euclideanDistance(testInstance, trainingSet[x], length)
+        dist = euclideanDistance(testInstance, trainingSet[x])
         distances.append((trainingSet[x], dist))
     distances.sort(key=operator.itemgetter(1))
     neighbors = []
@@ -461,11 +463,11 @@ def getResponse(neighbors):
     classVotes = {}
     for x in range(len(neighbors)):
         call_type = neighbors[x].call_type
-        if response in classVotes:
+        if call_type in classVotes:
             classVotes[call_type] += 1
         else:
             classVotes[call_type] = 1
-    sortedVotes = sorted(classVotes.iteritems(), key=operator.itemgetter(1), reverse=True)
+    sortedVotes = sorted(classVotes.items(), key=operator.itemgetter(1), reverse=True)
     return sortedVotes[0][0]
 
 def getAccuracy(testSet, predictions):
@@ -489,19 +491,26 @@ def kppv_localisation_call_type():
     for testInstance in test_set:
         neighbors = getNeighbors(training_set, testInstance, 3)
         estimated_class.append(getResponse(neighbors))
-    getAccuracy(test_set, estimated_class)
-    
-
-  
-
-  
-
-    math.hypot(p2[0] - p1[0], p2[1] - p1[1]) # Linear distance 
-
+    print(getAccuracy(test_set, estimated_class))
 
 
 def main():    
-   
+    # select_start_count()
+    # select_start_avg()
+    # select_call_type_count()
+    # select_call_type_distance()
+    # select_dayofweek_count()
+    # select_dayofweek_distance()
+    # select_end_count()
+    # select_end_distance()
+    # select_hour_count()
+    # select_month_count()
+    # select_month_distance()
+    # select_origin_stand_count()
+    # select_origin_stand_year_count()
+    # select_taxi_distance()
+    # select_taxi_distance()
+    kppv_localisation_call_type()
 
 if __name__ == '__main__':
     main()
