@@ -492,7 +492,61 @@ def kppv_localisation_call_type():
         neighbors = getNeighbors(training_set, testInstance, 3)
         estimated_class.append(getResponse(neighbors))
     print(getAccuracy(test_set, estimated_class))
+ 
+def cluster_points(X, mu):
+    clusters  = {}
+    for x in X:
+        bestmukey = min([(i[0], np.linalg.norm(np.array(x)-np.array(mu)[i[0]])) \
+                    for i in enumerate(mu)], key=lambda t:t[1])[0]
+        try:
+            clusters[bestmukey].append(x)
+        except KeyError:
+            clusters[bestmukey] = [x]
+    return clusters
+ 
+def reevaluate_centers(mu, clusters):
+    newmu = []
+    keys = sorted(clusters.keys())
+    for k in keys:
+        newmu.append(np.mean(clusters[k], axis = 0))
+    return newmu
+ 
+def has_converged(mu, oldmu):
+    return (set([tuple(a) for a in mu]) == set([tuple(a) for a in oldmu]))
+ 
+def find_centers(X, K):
+    # Initialize to K random centers
+    oldmu = random.sample(X, K)
+    mu = random.sample(X, K)
+    while not has_converged(mu, oldmu):
+        oldmu = mu
+        # Assign all points in X to clusters
+        clusters = cluster_points(X, mu)
+        # Reevaluate centers
+        mu = reevaluate_centers(oldmu, clusters)
+    return(mu, clusters)
 
+def kmeans():
+    color = ['red','green','blue']
+    rows = session.execute('select longitude_start, latitude_start, call_type, count(*) as occurences from by_pos_call_type group by longitude_start, latitude_start, call_type;')
+    list_point = []
+    list_x = []
+    list_y = []
+    labels = []
+    for row in rows:
+        list_point.append([row.longitude_start, row.latitude_start])
+        list_x.append(row.longitude_start)
+        list_y.append(row.latitude_start)
+    mu, clusters = find_centers(list_point, 3)
+    for point in list_point:
+        for i in range (1,len(clusters)):
+            if(point in clusters[i]):
+                labels.append(color[i])
+    fig = plt.figure()    
+    plt.axis([-7,-9,39,42.5])
+    plt.scatter(list_x, list_y, c=labels)
+    plt.savefig("kmeans.png")
+        
 
 def main():    
     # select_start_count()
@@ -510,7 +564,8 @@ def main():
     # select_origin_stand_year_count()
     # select_taxi_distance()
     # select_taxi_distance()
-    kppv_localisation_call_type()
+    # kppv_localisation_call_type()
+    kmeans()
 
 if __name__ == '__main__':
     main()
