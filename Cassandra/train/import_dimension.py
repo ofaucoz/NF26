@@ -48,8 +48,11 @@ def RepresentsFloat(s):
 def main():
     rand_value = random.randint(1,100)
     print("Reading CSV")
-    tables = ['by_hour', 'by_start', 'by_end', 'by_distance', 'by_taxi', 'by_call_type', 'by_day_of_week', 'by_month', 'by_origin_stand' ,'by_pos_call_type']
+    tables = ['by_hour','by_start','by_end','by_distance','by_taxi','by_call_type','by_pos_call_type','by_day_of_week','by_month','by_origin_stand','by_start_end']
     # tables = ['by_pos_call_type']
+    n = 0
+    BATCH_SIZE = 50
+    batch = BatchStatement()
     with open('/train.csv') as csvfile:
         reader = csv.reader(csvfile, delimiter=',', quotechar='"')
         header = next(reader)
@@ -95,7 +98,7 @@ def main():
             longitude_end = 0.0
             latitude_end = 0.0
             try:
-                if(missing_data != "FALSE" and rand > 95):
+                if(missing_data != "FALSE" and rand > 0):
                     date = datetime.datetime.fromtimestamp(int(timestamp))
                     localisation = polyline[2:-1].replace("]","").split(",[")
                     localisation_start = localisation[0]
@@ -140,8 +143,14 @@ def main():
                             + str(date.day) + "," + str(date.hour) + "," + str(date.month) + "," 
                             + str(date.year) + "," +  "'" + str(season) + "'" + "," + str(date.weekday()) + ","  
                             + "'" + str(day_type) + "'" + ")")
-                        session.execute(insert)
-            except ValueError:
+                        if n%BATCH_SIZE==0:
+                            n=1
+                            session.execute(batch)
+                            batch = BatchStatement()
+                        else:
+                            n+=1
+                            batch.add(insert)
+            except Exception as e:
                 continue
             id += 1
         print("Sending batch query")

@@ -9,6 +9,7 @@ import math
 import operator
 import random
 from cassandra.cluster import Cluster
+from cassandra.query import SimpleStatement
 cluster = Cluster()
 session = cluster.connect('e34_taxi')
 
@@ -182,7 +183,7 @@ def select_year_sum_distance():
     list_x = list()
     list_y = list()
     label_x = list()
-    rows = session.execute('select year, month, sum(distance) as total_distance from by_distance group by year, month;')
+    rows = session.execute('select year, sum(distance) as total_distance from by_distance group by year;')
     for row in rows:
         list_y.append(row.total_distance)
         list_x.append(row.year)
@@ -350,6 +351,11 @@ def select_origin_stand_count():
     list_x = list()
     list_y = list()
     label_x = list()
+    list_pos = list()
+    written_file = open("origin_stand.txt", 'w')
+    f = open('metaData_taxistandsID_name_GPSlocation.csv', 'rb')
+    stand = csv.reader(f)
+    header = stand.next()
     rows = session.execute('select origin_stand, count(*) as occurences from by_origin_stand group by origin_stand')
     for row in rows:
         list_y.append(row.occurences)
@@ -362,6 +368,10 @@ def select_origin_stand_count():
        label_x.append(list_x[indexi])
     list_y = heapq.nlargest(10, list_y)
     ind = np.arange(len(list_y))  # the x locations for the groups
+    for indice in ind:
+        list_pos.append(stand[indice])
+    for item in list_pos:
+        written_file.write("%s\n" % item)
     ax.barh(ind, list_y, width, color="blue")
     ax.set_yticks(ind+width/2)
     ax.set_yticklabels(label_x, minor=False)
@@ -459,7 +469,7 @@ def getNeighbors(trainingSet, testInstance, k):
         neighbors.append(distances[x][0])
     return neighbors
 
-def getResponse(neighbors):
+def getClass(neighbors):
     classVotes = {}
     for x in range(len(neighbors)):
         call_type = neighbors[x].call_type
@@ -490,7 +500,7 @@ def kppv_localisation_call_type():
             test_set.append(row)
     for testInstance in test_set:
         neighbors = getNeighbors(training_set, testInstance, 3)
-        estimated_class.append(getResponse(neighbors))
+        estimated_class.append(getClass(neighbors))
     print(getAccuracy(test_set, estimated_class))
  
 def cluster_points(X, mu):
@@ -510,15 +520,16 @@ def reevaluate_centers(mu, clusters):
     for k in keys:
         newmu.append(np.mean(clusters[k], axis = 0))
     return newmu
- 
-def has_converged(mu, oldmu):
-    return (set([tuple(a) for a in mu]) == set([tuple(a) for a in oldmu]))
+
+def has_converged_plot(mu, oldmu):
+return (set([tuple(a) for a in mu]) == set([tuple(a) for a in oldmu]))
+
  
 def find_centers(X, K):
     # Initialize to K random centers
     oldmu = random.sample(X, K)
     mu = random.sample(X, K)
-    while not has_converged(mu, oldmu):
+    while not has_converged_plot(mu, oldmu):
         oldmu = mu
         # Assign all points in X to clusters
         clusters = cluster_points(X, mu)
@@ -526,7 +537,7 @@ def find_centers(X, K):
         mu = reevaluate_centers(oldmu, clusters)
     return(mu, clusters)
 
-def kmeans():
+def kmeans_plot():
     color = ['red','green','blue']
     rows = session.execute('select longitude_start, latitude_start, call_type, count(*) as occurences from by_pos_call_type group by longitude_start, latitude_start, call_type;')
     list_point = []
@@ -546,7 +557,68 @@ def kmeans():
     plt.axis([-7,-9,39,42.5])
     plt.scatter(list_x, list_y, c=labels)
     plt.savefig("kmeans.png")
-        
+
+def has_converged(mu, old_mu):
+    res = True
+    for i in range (0,len(mu)):
+        if(not (mu[i]==old_mu[i]).all()):
+            res = False
+    return res
+
+def random_centroid(num_kmeans, centroid, cluster, number_cluster, statement):
+    M = 100
+    for i in range (0,num_kmeans):
+        M = 100
+        for row in session.execute(statement):
+            u = random.random()
+            if(u<M):
+                M = u
+                try:
+                    centroid[i] = np.array([float(row.longitude_start), float(row.latitude_start), float(row.longitude_end), float(row.latitude_end)])
+                except IndexError:
+                    centroid[i] = list()
+                    centroid[i] = np.array([float(row.longitude_start), float(row.latitude_start), float(row.longitude_end), float(row.latitude_end)])
+                try:
+                    cluster[i] = np.array([float(row.longitude_start), float(row.latitude_start), float(row.longitude_end), float(row.latitude_end)])
+                except IndexError:
+                    cluster[i] = list()
+                    cluster[i] = np.array([float(row.longitude_start), float(row.latitude_start), float(row.longitude_end), float(row.latitude_end)])
+                number_cluster[i] = 1
+
+def attribute_centroid(row, centroid):
+    distance_centroid = dict()
+    for i in range (1,len(centroid)):
+        distance_centroid[i] = np.linalg.norm(row - centroid[i])
+    return min(distance_centroid, key=distance_centroid.get)
+
+def kmeans():
+    query = "select longitude_start, latitude_start, longitude_end, latitude_end, count(*) as occurences from by_start_end group by longitude_start, latitude_start, longitude_end, latitude_end"
+    statement = SimpleStatement(query, fetch_size=10)
+    centroid = dict()
+    old_centroid = dict()
+    cluster = dict()
+    number_cluster = dict()
+    num_kmeans = 3    
+    print("Randomizing old and new centroid")
+    random_centroid(num_kmeans, centroid, cluster, number_cluster, statement)
+    print(centroid)
+    random_centroid(num_kmeans, old_centroid, {}, {}, statement)
+    print(old_centroid)
+    print("Computing centroid and waiting for convergence")
+    while(not has_converged(old_centroid, centroid)):
+        print("Not converged")
+        for row in session.execute(statement):
+            coord = np.array([float(row.longitude_start), float(row.latitude_start), float(row.longitude_end), float(row.latitude_end)])
+            old_centroid = centroid
+            j = attribute_centroid(coord, centroid)
+            cluster[j] += coord
+            number_cluster[j] += 1
+            centroid[j] = cluster[j]/number_cluster[j]
+        print(centroid)
+        print(old_centroid)
+
+
+
 
 def main():    
     # select_start_count()
@@ -560,12 +632,12 @@ def main():
     # select_hour_count()
     # select_month_count()
     # select_month_distance()
-    # select_origin_stand_count()
+    select_origin_stand_count()
     # select_origin_stand_year_count()
     # select_taxi_distance()
     # select_taxi_distance()
     # kppv_localisation_call_type()
-    kmeans()
+    # kmeans()
 
 if __name__ == '__main__':
     main()

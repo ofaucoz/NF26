@@ -58,17 +58,23 @@ def create_by_origin_stand():
     create = "CREATE TABLE by_origin_stand (id bigInt, longitude_start double, latitude_start double, longitude_end double, latitude_end double, distance double, call_type text, origin_call int, origin_stand int, taxi_id bigInt, timestamp int, day int, hour int, year int, month int, season text, dayOfWeek int, day_type text, PRIMARY KEY(origin_stand, year, month, day, dayOfWeek, hour, id));"
     session.execute(create)
 
+#Fait table_by_start_end
+def create_by_start_end():
+    create = "CREATE TABLE by_start_end (id bigInt, longitude_start double, latitude_start double, longitude_end double, latitude_end double, distance double, call_type text, origin_call int, origin_stand int, taxi_id bigInt, timestamp int, day int, hour int, year int, month int, season text, dayOfWeek int, day_type text, PRIMARY KEY((longitude_start, latitude_start, longitude_end, latitude_end), id));"
+    session.execute(create)
+
 def main():    
-    create_by_origin_stand()
-    create_by_month_distance()
-    create_by_day_of_week_distance()
-    create_by_call_type_distance()
-    create_by_taxi()
-    create_by_distance()
-    create_by_start()
-    create_by_end()
-    create_by_hour()
-    create_by_pos_call_type()
+   # create_by_origin_stand()
+   # create_by_month_distance()
+   # create_by_day_of_week_distance()
+   # create_by_call_type_distance()
+   # create_by_taxi()
+   # create_by_distance()
+   # create_by_start()
+   # create_by_end()
+   # create_by_hour()
+   # create_by_pos_call_type()
+    create_by_start_end()
 
 if __name__ == '__main__':
     main()
