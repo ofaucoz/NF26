@@ -12,6 +12,7 @@ from cassandra.cluster import Cluster
 from cassandra.query import SimpleStatement
 cluster = Cluster()
 session = cluster.connect('e34_taxi')
+session.default_timeout = 60
 
 # This script will query the tables 
 
@@ -55,7 +56,7 @@ def select_start_count():
     ax.set_yticks(ind+width/2)
     ax.set_yticklabels(label_x, minor=False)
     plt.title('Localisation les plus visitées')
-    plt.xlabel('Occurences sur 170000 trajets')
+    plt.xlabel('Occurences sur 934000 trajets')
     plt.ylabel('Positition')   
     plt.savefig("barplot_start.png")
 
@@ -102,7 +103,7 @@ def select_call_type_count():
     ax.barh(ind, list_y, width, color="blue")
     ax.set_yticks(ind+width/2)
     ax.set_yticklabels(label_x, minor=False)
-    plt.title('Nombre de courses par call_type pour 170000 occurences')
+    plt.title('Nombre de courses par call_type pour 934000 occurences')
     plt.xlabel('Nombre de courses')
     plt.ylabel('Call_type')   
     plt.savefig("barplot_call_type_count.png")
@@ -353,9 +354,9 @@ def select_origin_stand_count():
     label_x = list()
     list_pos = list()
     written_file = open("origin_stand.txt", 'w')
-    f = open('metaData_taxistandsID_name_GPSlocation.csv', 'rb')
+    f = open('metaData_taxistandsID_name_GPSlocation.csv', 'r')
     stand = csv.reader(f)
-    header = stand.next()
+    header = next(stand)
     rows = session.execute('select origin_stand, count(*) as occurences from by_origin_stand group by origin_stand')
     for row in rows:
         list_y.append(row.occurences)
@@ -369,7 +370,9 @@ def select_origin_stand_count():
     list_y = heapq.nlargest(10, list_y)
     ind = np.arange(len(list_y))  # the x locations for the groups
     for indice in ind:
-        list_pos.append(stand[indice])
+        for row in stand:
+            if row[0] == indice:
+                list_pos.append(str(row[2]) + "," + str(row[3]))
     for item in list_pos:
         written_file.write("%s\n" % item)
     ax.barh(ind, list_y, width, color="blue")
@@ -499,7 +502,7 @@ def kppv_localisation_call_type():
         else:
             test_set.append(row)
     for testInstance in test_set:
-        neighbors = getNeighbors(training_set, testInstance, 3)
+        neighbors = getNeighbors(training_set, testInstance, 2)
         estimated_class.append(getClass(neighbors))
     print(getAccuracy(test_set, estimated_class))
  
@@ -522,7 +525,7 @@ def reevaluate_centers(mu, clusters):
     return newmu
 
 def has_converged_plot(mu, oldmu):
-return (set([tuple(a) for a in mu]) == set([tuple(a) for a in oldmu]))
+    return (set([tuple(a) for a in mu]) == set([tuple(a) for a in oldmu]))
 
  
 def find_centers(X, K):
@@ -548,7 +551,7 @@ def kmeans_plot():
         list_point.append([row.longitude_start, row.latitude_start])
         list_x.append(row.longitude_start)
         list_y.append(row.latitude_start)
-    mu, clusters = find_centers(list_point, 3)
+    mu, clusters = find_centers(list_point, 2)
     for point in list_point:
         for i in range (1,len(clusters)):
             if(point in clusters[i]):
@@ -632,11 +635,11 @@ def main():
     # select_hour_count()
     # select_month_count()
     # select_month_distance()
-    select_origin_stand_count()
+    # select_origin_stand_count()
     # select_origin_stand_year_count()
+    # select_taxi_count()
     # select_taxi_distance()
-    # select_taxi_distance()
-    # kppv_localisation_call_type()
+    kppv_localisation_call_type()
     # kmeans()
 
 if __name__ == '__main__':

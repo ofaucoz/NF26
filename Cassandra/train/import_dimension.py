@@ -98,7 +98,7 @@ def main():
             longitude_end = 0.0
             latitude_end = 0.0
             try:
-                if(missing_data != "FALSE" and rand > 0):
+                if(missing_data != "FALSE" and rand > 50):
                     date = datetime.datetime.fromtimestamp(int(timestamp))
                     localisation = polyline[2:-1].replace("]","").split(",[")
                     localisation_start = localisation[0]
